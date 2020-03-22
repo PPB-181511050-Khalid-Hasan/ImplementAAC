@@ -11,54 +11,49 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
-public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder>{
+public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder>{
+    class TaskViewHolder extends RecyclerView.ViewHolder {
+        private final TextView taskItemView;
 
-    public class ViewHolder extends RecyclerView.ViewHolder{
-        public TextView deadlineName;
-        public TextView deadlineDetails;
-
-        public ViewHolder(View itemView) {
+        private TaskViewHolder(View itemView) {
             super(itemView);
-
-            deadlineName = (TextView) itemView.findViewById(R.id.task_name);
-            deadlineDetails = (TextView) itemView.findViewById(R.id.task_details);
+            taskItemView = itemView.findViewById(R.id.textView);
         }
     }
 
-    private List<Task> mTask;
+    private final LayoutInflater mInflater;
+    private List<Task> mTasks; // Cached copy of words
 
-    public TaskAdapter(List<Task> task) {
-        mTask = task;
-    }
+    TaskAdapter(Context context) { mInflater = LayoutInflater.from(context); }
 
-    @NonNull
     @Override
-    public TaskAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        Context context = parent.getContext();
-        LayoutInflater inflater = LayoutInflater.from(context);
-
-        View deadlineView = inflater.inflate(R.layout.item_task,parent,false);
-
-        ViewHolder viewHolder = new ViewHolder(deadlineView);
-        return viewHolder;
+    public TaskViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View itemView = mInflater.inflate(R.layout.recyclerview_item, parent, false);
+        return new TaskViewHolder(itemView);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder viewHolder, int position) {
-        Task task = mTask.get(position);
-
-        TextView deadlineName = viewHolder.deadlineName;
-        deadlineName.setText(task.getName());
-
-        TextView deadlineDetails = viewHolder.deadlineDetails;
-        deadlineDetails.setText(task.getDetails());
-
+    public void onBindViewHolder(TaskViewHolder holder, int position) {
+        if (mTasks != null) {
+            Task current = mTasks.get(position);
+            holder.taskItemView.setText(current.getTask());
+        } else {
+            // Covers the case of data not being ready yet.
+            holder.taskItemView.setText("No Word");
+        }
     }
 
+    void setTasks(List<Task> tasks){
+        mTasks = tasks;
+        notifyDataSetChanged();
+    }
 
+    // getItemCount() is called many times, and when it is first called,
+    // mWords has not been updated (means initially, it's null, and we can't return null).
     @Override
-    public int getItemCount() {return mTask.size();
+    public int getItemCount() {
+        if (mTasks != null)
+            return mTasks.size();
+        else return 0;
     }
-
-
 }

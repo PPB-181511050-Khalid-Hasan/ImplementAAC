@@ -4,10 +4,12 @@ import android.content.Intent;
 import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -16,16 +18,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    ArrayList<Task> task;
-    String aName;
-    String aDetail;
-    TaskAdapter adapter;
+    private TaskViewModel mTaskViewModel;
 
-    Intent data = new Intent("com.example.alonso_app.BuatActivity");
+    public static final int BUAT_ACTIVITY_REQUEST_CODE = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,46 +33,46 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        RecyclerView rvTask = (RecyclerView)findViewById(R.id.rvTask);
 
-        task = Task.createTaskList(2);
+        RecyclerView recyclerView = findViewById(R.id.rvTask);
+        final TaskAdapter adapter = new TaskAdapter(this);
+        recyclerView.setAdapter(adapter);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        adapter = new TaskAdapter(task);
-
-        rvTask.setAdapter(adapter);
-        rvTask.setLayoutManager(new LinearLayoutManager(this));
+        mTaskViewModel = new ViewModelProvider(this).get(TaskViewModel.class);
+        mTaskViewModel.getAllTask().observe(this, new Observer<List<Task>>() {
+            @Override
+            public void onChanged(@Nullable final List<Task> tasks) {
+                // Update the cached copy of the words in the adapter.
+                adapter.setTasks(tasks);
+            }
+        });
 
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivityForResult(data,1);
-//                task.add(new Task("PPL1","Tugas Refactor"));
-//                adapter.notifyDataSetChanged();
-//
-//
-//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
+                Intent intent = new Intent(MainActivity.this, BuatActivity.class);
+                startActivityForResult(intent, BUAT_ACTIVITY_REQUEST_CODE);
             }
         });
     }
 
 
-    public void onActivityResult(int requestCode, int resultCode, Intent data){
-        if(requestCode==1){
-            if(resultCode==RESULT_OK){
-                aName = data.getStringExtra("aName");
-                aDetail = data.getStringExtra("aDetail");
-                Toast.makeText(this, "Task berhasil ditambah", Toast.LENGTH_LONG).show();
-//                Toast.makeText(this, DetailFromIntent1, Toast.LENGTH_LONG).show();
-//                Toast.makeText(this, DateFromIntent1, Toast.LENGTH_LONG).show();
-                //deadlineArrayList.add(new Deadline(NameFromIntent1,DetailFromIntent1,DateFromIntent1));
-                task.add(new Task(aName,aDetail));
-            }
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == BUAT_ACTIVITY_REQUEST_CODE && resultCode == RESULT_OK) {
+            Task task = new Task(data.getStringExtra(BuatActivity.EXTRA_REPLY));
+            mTaskViewModel.insert(task);
+        } else {
+            Toast.makeText(
+                    getApplicationContext(),
+                    R.string.empty_not_saved,
+                    Toast.LENGTH_LONG).show();
         }
-        adapter.notifyDataSetChanged();
-        super.onActivityResult(requestCode,resultCode,data);
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -84,9 +83,6 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
@@ -96,5 +92,4 @@ public class MainActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
-
 }

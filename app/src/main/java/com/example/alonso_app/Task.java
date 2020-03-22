@@ -1,27 +1,23 @@
 package com.example.alonso_app;
 
-import java.util.ArrayList;
+import androidx.annotation.NonNull;
+import androidx.room.ColumnInfo;
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
+
+@Entity(tableName = "task_table")
 
 public class Task {
-    private String mTaskName;
-    private String mTaskDetails;
 
-    public Task(String name, String details) {
-        mTaskName = name;
-        mTaskDetails = details;
-    }
+    @PrimaryKey
+    @NonNull
+    @ColumnInfo(name = "task")
 
-    public String getName() {
-        return mTaskName;
-    }
+    private String mTask;
 
-    public String getDetails() {
-        return mTaskDetails;
-    }
+    public Task(@NonNull String task) {this.mTask = task;}
 
-    public static ArrayList<Task> createTaskList(int numDeadline) {
-        ArrayList<Task> taskArrayList = new ArrayList<Task>();
+    public String getTask(){return this.mTask;}
 
-        return taskArrayList;
-    }
 }
+
